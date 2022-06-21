@@ -1,0 +1,191 @@
+0 
+순위(모든 multi node 구성에 공통적용)
+1. sudo passwd root 패스워드 생성
+jdk 8버전 설치
+2. sudo apt install openjdk-8-jdk 
+3. sudo apt install net-tools
+ifconfig 명령을 통해 ip 확인:192.168.86.128
+- 네트웍상태확인 ifconfig
+- 네트워크 인터페이스 제어. ip등등.
+- iconfig에서 나오는 것으로 ip 복사해두기.
+
+4. 패스 워드 생략하고 slave node 데몬 실행
+- 하둡을 실행하기 위해서 사용하는 데몬들이 있음.
+- 데몬을 제어하기 위해서는 인증키가 있어야, 비밀번호를 설정하지 않아도 사용 가능하다. 
+sudo apt install openssh-server openssh-client
+5. host 등록
+su 후 root 로그인후 
+vi /etc/hosts 
+
+(gedit /etc/hosts)
+
+
+ip master
+ip slave
+ex)
+127.0.0.1	localhost
+#127.0.0.1	ubuntu
+본인 ip	master
+vmware slave1
+
+192.x.x.x	master
+192.x.x.x	slave1
+192.x.x.x	slave2
+6./etc/hostname  ==>master로
+
+
+1. 터미널 실행: ctrl + alt + t
+2. 폰트사이즈 edit-preference
+
+
+3. wget http://mirror.apache-kr.org/hadoop/common/hadoop-2.10.0/hadoop-2.10.0.tar.gz
+불여우: 구글-> hadoop -> 2.10.1 binary download
+
+4. home으로 이동후 압축해제
+tar xzvf hadoop-2.10.0.tar.gz  
+
+환경변수 설정
+1. 탐색기(ctrl+h) 히든파일이 보여진다
+2. .bashrc 
+
+export HADOOP_HOME=/home/master/hadoop-2.10.1
+export PATH=$PATH:$HADOOP_HOME/bin
+export JAVA_HOME=/usr/lib/jvm/java-1.8.0-openjdk-amd64
+
+환경변수 적용
+. .bashrc or source .bashrc
+
+3.
+namenode, datanode: name노드는 데이터가 분산 저장된 파일에 대한 indexing을 가지고 있다. 
+이 네임노드로 사용할 디렉토리를 정하는 것. 
+
+
+mkdir -p hadoop_store/hdfs/namenode
+chmod 777 hadoop_store/hdfs/namenode
+
+
+#chown mobile:hadoop -R /home/mobile/hadoop_store/hdfs/namenode
+
+mkdir -p hadoop_store/hdfs/datanode
+chmod 777 hadoop_store/hdfs/datanode
+
+추가: 환경파일 설정
+- 다운로드 받는 파일에master를 압축을 풀고, 하둡이 깔린 곳에 복붙
+
+hdsf-site: 하둡이 있는 name space를 적어주는 것. 
+masters: name node로 운영할 host
+slaves: slave로 운영할 이름을 주는 것
+
+4. spark download
+tar xzvf spark-2.4.6-bin-hadoop2.7.tgz
+5. path 추가
+export PYSPARK_PYTHON=python3
+export PYTHONPATH=$PYTHONPATH:/home/mobile/spark-2.4.6-bin-hadoop2.7/python
+export PYTHONPATH=$PYTHONPATH:/home/mobile/spark-2.4.6-bin-hadoop2.7/python/lib/py4j-0.10.7-src.zip
+export SPARK_HOME=/home/mobile/spark-2.4.6-bin-hadoop2.7
+=============================================
+6. master --> slave로 복사
+7. slave 의 /etc/hostname slave 로 변경 reboot
+8. slave: ping master ,master: ping slave
+
+9. master 인증키 생성후 slave 로 복사
+ # password 없이도 사용할 수 있도록 설정. demon 키를 설정할때 매우 중요함. 본인과 본인 사이에서도 인증키를 설정해야 한다.
+ssh-keygen -t rsa
+cp ~/.ssh/id_rsa.pub ~/.ssh/authorized_keys
+## 인증키가 만들어진 폴더에 있는 키를 복사해주는 명령어
+
+##
+
+(slave에서)
+mkdir .ssh (slave 실행후)
+(마스터에서)
+scp ~/.ssh/id_rsa.pub master@slave:/home/master/.ssh/authorized_keys
+ssh slave 확인
+
+## scp가 원격 복사하는 커맨드. # master에는 ip가 들어가도 된다.
+
+=======================================
+10. 하둡 환경
+master... master, slave
+
+11.
+## 네임, 데이터 노드를 포맷. 전부 이하는 master에서 실행한다.
+하둡서버 실행
+hdfs namenode -format (하둡파일시스템으로) 한번만
+
+sbin아래
+start-dfs.sh
+start-yarn.sh
+
+start-all.sh
+stop-all.sh
+
+master jps (yarn, name..)
+slave (datanode)
+
+12 web ui
+http://localhost:50070
+
+13. 시험해보기
+
+hdfs dfs -ls / ## 폴더내 파일의 목록 살펴보기
+master@master:~/hadoop-2.10.1/sbin$ hdfs dfs -mkdir /data # 시험용 data 폴더 만들기.
+master@master:~/hadoop-2.10.1/sbin$ gedit a.txt ## 시험용 a.txt작성하기
+
+a.txt에 
+aaa
+bbb
+ccc
+ddd
+
+작성
+
+master@master:~/hadoop-2.10.1/sbin$ gedit a.txt
+
+확인
+
+
+master@master:~/hadoop-2.10.1/sbin$ hdfs dfs -put a.txt /data
+
+data 폴더에 a.txt올리기.
+
+14. anaconda설치
+
+sh 
+
+중간에 lience는 tab키로 읽어주기. 
+
+
+====================
+spark 설정
+---------------------
+conf/slaves
+host이름나열
+slave1
+slave2
+
+conf/spark-env.sh
+export SPARK_HOME=/home/mobile/spark-2.4.6-bin-hadoop2.7 
+export JAVA_HOME=/usr/lib/jvm/java-1.8.0-openjdk-amd64
+export SPARK_MASTER_IP=master
+export SPARK_WORKER_INSTNACES=3
+export SPARK_WORKER_CORES=2
+export SPARK_WORKER_MEMORY=2g
+
+sbin/start-all.sh 
+
+web ui
+master:8080
+
+===
+ubuntu jupyte notebook
+
+sudo apt install python3-pip
+sudo pip3 install notebook
+
+
+
+
+
+
+

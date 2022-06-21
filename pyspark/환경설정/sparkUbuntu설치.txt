@@ -1,0 +1,75 @@
+vmware player 설치
+ubuntu.com 우분투 다운로드
+mobile 계정이름으로 설치
+
+0. sudo passwd root :root패스워드
+
+password 1234
+
+# 1. spark-2.3.2-bin-hadoop2.7  down :스파크다운로드 후 압축풀기
+2. sudo apt install openjdk-8-jdk; jdk8 설치
+3. sudo apt install net-tools: 네트웍상태확인 ifconfig
+- 네트워크 인터페이스 제어. ip등등
+
+4. .bashrc
+export JAVA_HOME=/usr/lib/jvm/java-1.8.0-openjdk-amd64
+export PYSPARK_PYTHON=python3
+export PYTHONPATH=$PYTHONPATH:/home/mobile/spark-2.3.3-bin-hadoop2.7/python
+export PYTHONPATH=$PYTHONPATH:/home/mobile/spark-2.3.3-bin-hadoop2.7/python/lib/py4j-0.10.7-src.zip
+alias cc="clear"
+
+. .bashrc :실행
+
+5. sudo apt install openssh-server openssh-client
+
+6.
+/etc/hosts ( 마스터 슬레이브 모두)
+
+127.0.0.1	localhost
+#127.0.0.1	ubuntu
+192.x.x.x	master
+192.x.x.x	slave1
+192.x.x.x	slave2
+====================slave 복사===============================
+
+7. /etc/hostname  ==>master로
+/etc/hostname  ==>slave로
+리부팅할것
+
+8. 접속확인
+ping master  (slave에서)
+ping slave (master 에서)
+
+
+5.로그인 없이 실행
+(마스터에서)
+ssh-keygen -t rsa
+cp ~/.ssh/id_rsa.pub ~/.ssh/authorized_keys
+ssh localhost
+
+(slave에서)
+mkdir .ssh (slave 실행후)
+(마스터에서)
+scp ~/.ssh/id_rsa.pub mobile@slave:/home/mobile/.ssh/authorized_keys
+ssh slave 확인
+
+
+==========스파크 설정==============
+마스터 
+
+1. conf/spark-env.sh
+export SPARK_HOME=/home/mobile/spark-2.3.3-bin-hadoop2.7 
+export JAVA_HOME=/usr/lib/jvm/java-1.8.0-openjdk-amd64
+export SPARK_MASTER_IP=master
+export SpA
+
+2. conf/slaves 
+master
+slave
+#slave1
+#slave2
+
+
+3. sbin/start-all.sh 
+web master:8080 
+
